@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Volunteer Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group h2 {
+            color: #34495e;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-buttons button {
+            background-color: #2ecc71;
+        }
+
+        .filter-buttons button:hover {
+            background-color: #27ae60;
+        }
+
+        .volunteer-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .volunteer-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .volunteer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .volunteer-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .volunteer-email {
+            color: #7f8c8d;
+        }
+
+        .volunteer-status {
+            margin-top: 0.5rem;
+        }
+
+        .status-available {
+            color: #27ae60;
+        }
+
+        .status-unavailable {
+            color: #e74c3c;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-buttons button.update {
+            background-color: #f39c12;
+        }
+
+        .action-buttons button.delete {
+            background-color: #e74c3c;
+        }
+
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .volunteer-item {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .action-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Volunteer Management</h1>
+
+    <div class="form-group">
+        <h2>Add New Volunteer</h2>
+        <div class="input-group">
+            <input type="text" id="name" placeholder="Name">
+            <input type="email" id="email" placeholder="Email">
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="available">
+            <label for="available">Available</label>
+        </div>
+        <button onclick="addVolunteer()">Add Volunteer</button>
+    </div>
+
+    <div class="filter-buttons">
+        <button onclick="loadVolunteers()">Show All</button>
+        <button onclick="loadAvailableVolunteers()">Show Available Only</button>
+    </div>
+
+    <div id="volunteerList" class="volunteer-list"></div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api';
+
+    // Load all volunteers
+    async function loadVolunteers() {
+        const response = await fetch(`${API_URL}/volunteers`);
+        const volunteers = await response.json();
+        displayVolunteers(volunteers);
+    }
+
+    // Load available volunteers
+    async function loadAvailableVolunteers() {
+        const response = await fetch(`${API_URL}/volunteers/available`);
+        const volunteers = await response.json();
+        displayVolunteers(volunteers);
+    }
+
+    // Add new volunteer
+    async function addVolunteer() {
+        const volunteer = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            available: document.getElementById('available').checked
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/volunteer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(volunteer)
+            });
+
+            if (!response.ok) throw new Error('Failed to add volunteer');
+
+            // Clear form
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('available').checked = false;
+
+            loadVolunteers();
+        } catch (error) {
+            alert('Error adding volunteer: ' + error.message);
+        }
+    }
+
+    // Update volunteer
+    async function updateVolunteer(id, currentName, currentEmail, currentAvailable) {
+        const name = prompt("Enter new name:", currentName);
+        const email = prompt("Enter new email:", currentEmail);
+        const available = confirm("Is volunteer available?");
+
+        if (!name || !email) return;
+
+        const volunteer = { name, email, available };
+
+        try {
+            const response = await fetch(`${API_URL}/volunteer/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(volunteer)
+            });
+
+            if (!response.ok) throw new Error('Failed to update volunteer');
+            loadVolunteers();
+        } catch (error) {
+            alert('Error updating volunteer: ' + error.message);
+        }
+    }
+
+    // Delete volunteer
+    async function deleteVolunteer(id) {
+        if (confirm('Are you sure you want to delete this volunteer?')) {
+            try {
+                const response = await fetch(`${API_URL}/volunteer/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete volunteer');
+                loadVolunteers();
+            } catch (error) {
+                alert('Error deleting volunteer: ' + error.message);
+            }
+        }
+    }
+
+    // Display volunteers in the list
+    function displayVolunteers(volunteers) {
+        const list = document.getElementById('volunteerList');
+        list.innerHTML = '';
+
+        volunteers.forEach(volunteer => {
+            const div = document.createElement('div');
+            div.className = 'volunteer-item';
+            div.innerHTML = `
+                <div class="volunteer-info">
+                    <div class="volunteer-name">${volunteer.name}</div>
+                    <div class="volunteer-email">${volunteer.email}</div>
+                    <div class="volunteer-status ${volunteer.available ? 'status-available' : 'status-unavailable'}">
+                        ${volunteer.available ? '✅ Available' : '❌ Not Available'}
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="update" onclick="updateVolunteer(${volunteer.id}, '${volunteer.name}', '${volunteer.email}', ${volunteer.available})">Update</button>
+                    <button class="delete" onclick="deleteVolunteer(${volunteer.id})">Delete</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // Load volunteers when page loads
+    loadVolunteers();
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = {"http://localhost:3000","http://localhost:8080"}) // Add your frontend URL here
+//@CrossOrigin(origins = {"http://localhost:3000","http://localhost:8080"}) // Add your frontend URL here
 public class VolunteerController {
 
     private final VolunteerService svc;
